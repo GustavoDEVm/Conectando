@@ -1,53 +1,104 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React from "react";
+import "./App.css";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { Toaster } from "./components/ui/toaster";
+import ProtectedRoute from "./components/Layout/ProtectedRoute";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+// Pages
+import Login from "./pages/Login";
+import Inicio from "./pages/Inicio";
+import Servicos from "./pages/Servicos";
+import MeusAgendamentos from "./pages/MeusAgendamentos";
+import Historico from "./pages/Historico";
+import Perfil from "./pages/Perfil";
+import MeusServicos from "./pages/MeusServicos";
+import NovoServico from "./pages/NovoServico";
+import Agendamentos from "./pages/Agendamentos";
 
 function App() {
   return (
-    <div className="App">
+    <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* Protected Routes - User */}
+          <Route
+            path="/inicio"
+            element={
+              <ProtectedRoute>
+                <Inicio />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/servicos"
+            element={
+              <ProtectedRoute>
+                <Servicos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/meus-agendamentos"
+            element={
+              <ProtectedRoute>
+                <MeusAgendamentos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/historico"
+            element={
+              <ProtectedRoute>
+                <Historico />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/perfil"
+            element={
+              <ProtectedRoute>
+                <Perfil />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected Routes - Organizer */}
+          <Route
+            path="/meus-servicos"
+            element={
+              <ProtectedRoute organizerOnly>
+                <MeusServicos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/novo-servico"
+            element={
+              <ProtectedRoute organizerOnly>
+                <NovoServico />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/agendamentos"
+            element={
+              <ProtectedRoute organizerOnly>
+                <Agendamentos />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 404 */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        <Toaster />
       </BrowserRouter>
-    </div>
+    </AuthProvider>
   );
 }
 
