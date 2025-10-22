@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Layout/Header';
-import { mockServices } from '../mock/mockData';
+import { servicesAPI, bookingsAPI } from '../services/api';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
@@ -15,10 +15,33 @@ import { MapPin, Clock, Calendar as CalendarIcon } from 'lucide-react';
 const Servicos = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState(null);
   const [bookingDate, setBookingDate] = useState(null);
   const [bookingTime, setBookingTime] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Carregar serviços ao montar o componente
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  const loadServices = async () => {
+    try {
+      const data = await servicesAPI.getAll();
+      setServices(data);
+    } catch (error) {
+      console.error('Erro ao carregar serviços:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar os serviços',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBookService = (service) => {
     setSelectedService(service);
@@ -27,7 +50,7 @@ const Servicos = () => {
     setNotes('');
   };
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     if (!bookingDate || !bookingTime) {
       toast({
         title: 'Erro',
@@ -37,14 +60,43 @@ const Servicos = () => {
       return;
     }
 
-    // Mock booking creation
-    toast({
-      title: 'Agendamento realizado!',
-      description: 'Seu agendamento foi criado com sucesso',
-    });
-    
-    setSelectedService(null);
+    try {
+      // Formata a data para YYYY-MM-DD
+      const formattedDate = bookingDate.toISOString().split('T')[0];
+      
+      await bookingsAPI.create({
+        service_id: selectedService.id,
+        date: formattedDate,
+        time: bookingTime,
+        notes: notes
+      });
+
+      toast({
+        title: 'Agendamento realizado!',
+        description: 'Seu agendamento foi criado com sucesso',
+      });
+      
+      setSelectedService(null);
+    } catch (error) {
+      console.error('Erro ao criar agendamento:', error);
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.detail || 'Não foi possível criar o agendamento',
+        variant: 'destructive'
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-pink-50">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-pink-50">
@@ -57,10 +109,10 @@ const Servicos = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockServices.map((service) => (
+          {services.map((service) => (
             <Card key={service.id} className="bg-white overflow-hidden hover:shadow-xl transition-shadow">
               <img
-                src={service.photo}
+                src={service.photo || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400'}
                 alt={service.name}
                 className="w-full h-48 object-cover"
               />
@@ -81,12 +133,12 @@ const Servicos = () => {
                   </div>
                   <div className="flex items-center text-sm text-gray-500">
                     <CalendarIcon className="w-4 h-4 mr-2" />
-                    {service.availability_days.slice(0, 2).join(', ')}
-                    {service.availability_days.length > 2 && '...'}
+                    {service.availability_days?.slice(0, 2).join(', ')}
+                    {service.availability_days?.length > 2 && '...'}
                   </div>
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="w-4 h-4 mr-2" />
-                    {service.time_slots[0]} - {service.time_slots[service.time_slots.length - 1]}
+                    {service.time_slots?.[0]} - {service.time_slots?.[service.time_slots.length - 1]}
                   </div>
                 </div>
                 
@@ -100,6 +152,12 @@ const Servicos = () => {
             </Card>
           ))}
         </div>
+
+        {services.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Nenhum serviço disponível no momento</p>
+          </div>
+        )}
 
         {/* Booking Dialog */}
         <Dialog open={!!selectedService} onOpenChange={() => setSelectedService(null)}>
@@ -130,7 +188,7 @@ const Servicos = () => {
                     <SelectValue placeholder="Selecione um horário" />
                   </SelectTrigger>
                   <SelectContent>
-                    {selectedService?.time_slots.map((slot) => (
+                    {selectedService?.time_slots?.map((slot) => (
                       <SelectItem key={slot} value={slot}>
                         {slot}
                       </SelectItem>
