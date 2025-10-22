@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/Layout/ProtectedRoute";
 
 // Pages
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Inicio from "./pages/Inicio";
 import Servicos from "./pages/Servicos";
 import MeusAgendamentos from "./pages/MeusAgendamentos";
