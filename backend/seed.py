@@ -2,9 +2,6 @@
 # ============================================================================
 # SEED.PY - Script para popular o banco de dados com dados iniciais
 # ============================================================================
-# Este script adiciona usuários e serviços de exemplo no banco de dados
-# para facilitar o teste da aplicação.
-# ============================================================================
 
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -17,32 +14,20 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Conexão com MongoDB
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-
 async def seed_database():
-    """
-    Popula o banco de dados com dados iniciais.
-    """
     print("🌱 Iniciando seed do banco de dados...")
     
-    # ========================================================================
-    # LIMPAR DADOS EXISTENTES (OPCIONAL - CUIDADO EM PRODUÇÃO!)
-    # ========================================================================
     print("🗑️  Limpando dados existentes...")
     await db.users.delete_many({})
     await db.services.delete_many({})
     await db.bookings.delete_many({})
     
-    # ========================================================================
-    # CRIAR USUÁRIOS
-    # ========================================================================
     print("👥 Criando usuários...")
     
-    # Usuário regular
     user1 = User(
         email="tomoli9706@ampdial.com",
         hashed_password=hash_password("12345678"),
@@ -56,7 +41,6 @@ async def seed_database():
     await db.users.insert_one(user1.model_dump())
     print(f"✅ Usuário criado: {user1.email}")
     
-    # Organizador
     user2 = User(
         email="kaxafec531@datoinf.com",
         hashed_password=hash_password("09876543"),
@@ -70,9 +54,6 @@ async def seed_database():
     await db.users.insert_one(user2.model_dump())
     print(f"✅ Organizador criado: {user2.email}")
     
-    # ========================================================================
-    # CRIAR SERVIÇOS
-    # ========================================================================
     print("🎯 Criando serviços...")
     
     services = [
@@ -152,15 +133,6 @@ async def seed_database():
     print("\n" + "="*60)
     print("🎉 Seed concluído com sucesso!")
     print("="*60)
-    print("\n📋 CREDENCIAIS DE TESTE:\n")
-    print("👤 USUÁRIO:")
-    print(f"   Email: {user1.email}")
-    print("   Senha: 12345678\n")
-    print("👨‍💼 ORGANIZADOR:")
-    print(f"   Email: {user2.email}")
-    print("   Senha: 09876543\n")
-    print("="*60)
-
 
 if __name__ == "__main__":
     asyncio.run(seed_database())
