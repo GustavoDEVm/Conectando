@@ -28,14 +28,23 @@ const Perfil = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    updateProfile(formData);
+    const result = await updateProfile(formData);
     setIsEditing(false);
-    toast({
-      title: 'Perfil atualizado',
-      description: 'Suas informações foram atualizadas com sucesso',
-    });
+    
+    if (result.success) {
+      toast({
+        title: 'Perfil atualizado',
+        description: 'Suas informações foram atualizadas com sucesso',
+      });
+    } else {
+      toast({
+        title: 'Erro',
+        description: result.error || 'Não foi possível atualizar o perfil',
+        variant: 'destructive',
+      });
+    }
   };
 
   const formatDate = (dateString) => {
