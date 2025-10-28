@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Layout/Header';
-import { getBookingsByOrganizer } from '../mock/mockData';
+import { bookingsAPI } from '../services/api';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
@@ -13,8 +13,24 @@ const Agendamentos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('todos');
   const [filterService, setFilterService] = useState('todos');
-  
-  const bookings = getBookingsByOrganizer(user.id);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carregar agendamentos ao montar
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  const loadBookings = async () => {
+    try {
+      const data = await bookingsAPI.getOrganizerBookings();
+      setBookings(data);
+    } catch (error) {
+      console.error('Erro ao carregar agendamentos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Get unique services
   const services = [...new Set(bookings.map(b => b.service?.name))].filter(Boolean);
