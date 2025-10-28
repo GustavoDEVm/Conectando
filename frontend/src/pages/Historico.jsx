@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Layout/Header';
-import { getBookingsByUser } from '../mock/mockData';
+import { bookingsAPI } from '../services/api';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
@@ -10,8 +10,24 @@ import { BarChart3, CheckCircle, XCircle, Clock, Star, Calendar } from 'lucide-r
 const Historico = () => {
   const { user } = useAuth();
   const [filterPeriod, setFilterPeriod] = useState('todos');
-  
-  const bookings = getBookingsByUser(user.id);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carregar agendamentos
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  const loadBookings = async () => {
+    try {
+      const data = await bookingsAPI.getMyBookings();
+      setBookings(data);
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const stats = {
     total: bookings.length,
