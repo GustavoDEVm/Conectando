@@ -54,13 +54,19 @@ const NovoServico = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData(prev => ({ ...prev, photo: file }));
+      // Para simplificar, vamos usar uma URL de placeholder
+      // Em produção, você faria upload para um serviço como Cloudinary ou S3
+      setFormData(prev => ({ 
+        ...prev, 
+        photo: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400' 
+      }));
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validações
     if (!formData.name || !formData.type || !formData.description) {
       toast({
         title: 'Erro',
@@ -79,12 +85,27 @@ const NovoServico = () => {
       return;
     }
 
-    toast({
-      title: 'Serviço criado!',
-      description: 'Seu serviço foi cadastrado com sucesso',
-    });
-    
-    navigate('/meus-servicos');
+    setLoading(true);
+
+    try {
+      await servicesAPI.create(formData);
+      
+      toast({
+        title: 'Serviço criado!',
+        description: 'Seu serviço foi cadastrado com sucesso',
+      });
+      
+      navigate('/meus-servicos');
+    } catch (error) {
+      console.error('Erro ao criar serviço:', error);
+      toast({
+        title: 'Erro',
+        description: error.response?.data?.detail || 'Não foi possível criar o serviço',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
