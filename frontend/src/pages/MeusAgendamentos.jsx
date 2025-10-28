@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Layout/Header';
-import { getBookingsByUser } from '../mock/mockData';
+import { bookingsAPI } from '../services/api';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -13,18 +13,51 @@ const MeusAgendamentos = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [filterStatus, setFilterStatus] = useState('todos');
-  
-  const bookings = getBookingsByUser(user.id);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carregar agendamentos ao montar
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
+  const loadBookings = async () => {
+    try {
+      const data = await bookingsAPI.getMyBookings();
+      setBookings(data);
+    } catch (error) {
+      console.error('Erro ao carregar agendamentos:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar seus agendamentos',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredBookings = filterStatus === 'todos' 
     ? bookings 
     : bookings.filter(b => b.status === filterStatus);
 
-  const handleCancelBooking = (bookingId) => {
-    toast({
-      title: 'Agendamento cancelado',
-      description: 'Seu agendamento foi cancelado com sucesso',
-    });
+  const handleCancelBooking = async (bookingId) => {
+    try {
+      await bookingsAPI.cancel(bookingId);
+      toast({
+        title: 'Agendamento cancelado',
+        description: 'Seu agendamento foi cancelado com sucesso',
+      });
+      // Recarregar a lista
+      loadBookings();
+    } catch (error) {
+      console.error('Erro ao cancelar:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível cancelar o agendamento',
+        variant: 'destructive'
+      });
+    }
   };
 
   const getStatusBadge = (status) => {
