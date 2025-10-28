@@ -237,8 +237,9 @@ const NovoServico = () => {
               <Button
                 type="submit"
                 className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+                disabled={loading}
               >
-                Cadastrar Serviço
+                {loading ? 'Cadastrando...' : 'Cadastrar Serviço'}
               </Button>
             </div>
           </form>
