@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Layout/Header';
+import { servicesAPI } from '../services/api';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,14 +16,15 @@ import { serviceTypes } from '../mock/mockData';
 const NovoServico = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     type: '',
     description: '',
-    photo: null,
+    photo: '',
     location: '',
     availability_days: [],
-    time_slots: []
+    time_slots: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00']
   });
 
   const weekDays = [
