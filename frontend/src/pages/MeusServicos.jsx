@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Layout/Header';
-import { getServicesByOrganizer } from '../mock/mockData';
+import { servicesAPI } from '../services/api';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Plus, Calendar, MapPin, Edit, Trash2 } from 'lucide-react';
@@ -12,15 +12,59 @@ const MeusServicos = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const services = getServicesByOrganizer(user.id);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleDeleteService = (serviceId) => {
-    toast({
-      title: 'Serviço removido',
-      description: 'O serviço foi removido com sucesso',
-    });
+  // Carregar serviços ao montar
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  const loadServices = async () => {
+    try {
+      const data = await servicesAPI.getMyServices();
+      setServices(data);
+    } catch (error) {
+      console.error('Erro ao carregar serviços:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar seus serviços',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleDeleteService = async (serviceId) => {
+    try {
+      await servicesAPI.delete(serviceId);
+      toast({
+        title: 'Serviço removido',
+        description: 'O serviço foi removido com sucesso',
+      });
+      // Recarregar a lista
+      loadServices();
+    } catch (error) {
+      console.error('Erro ao deletar:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível remover o serviço',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-pink-50">
+        <Header />
+        <div className="flex items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-pink-50">
