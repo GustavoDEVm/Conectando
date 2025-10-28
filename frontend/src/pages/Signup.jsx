@@ -53,7 +53,7 @@ const Signup = () => {
 
     setLoading(true);
 
-    const result = signup(formData);
+    const result = await signup(formData);
     
     if (result.success) {
       toast({
